@@ -4,8 +4,15 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.api_v1.api import api_router
 from app.core.config import settings
 
+if settings.DEBUG_MODE:
+    import debugpy
+    debugpy.listen(("0.0.0.0", 5432))
+    if settings.WAIT_FOR_ATTACH:
+        debugpy.wait_for_client()
+
 app = FastAPI(
-    title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    debug=settings.DEBUG_MODE
 )
 
 # Set all CORS enabled origins
