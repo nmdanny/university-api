@@ -5,7 +5,9 @@ from app.models.item import Item  # noqa
 from app.models.user import User  # noqa
 from app.models.university import University  # noqa
 from app.models.faculty import Faculty  # noqa
+from app.models.department import Department  # noqa
 from app.models.track import Track, DegreeType  # noqa
 from app.models.term import Term  # noqa
 from app.models.course import Course  # noqa
 from app.models.track_course import track_course  # noqa
+from app.models.track_department import track_department  # noqa

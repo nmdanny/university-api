@@ -1,15 +1,17 @@
 from typing import TYPE_CHECKING, List
 import enum
 
-from sqlalchemy import Column, Integer, String, Enum, ForeignKeyConstraint
+from sqlalchemy import Column, Integer, Text, Enum, ForeignKey
 from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.dialects.postgresql import JSON
 from app.db.base_class import Base, ExtraData, Translations
 
 from .track_course import track_course
+from .track_department import track_department
 
 if TYPE_CHECKING:
-    from .faculty import Faculty  # noqa: F401
+    from .university import University  # noqa: F401
+    from .department import Department  # noqa: F401
     from .course import Course  # noqa: F401
 
 
@@ -19,28 +21,35 @@ class DegreeType(enum.Enum):
         https://en.wikipedia.org/wiki/International_Standard_Classification_of_Education
     """
 
+    Misc = 0
     Bachelors = 6
     Masters = 7
     Doctoral = 8
 
 
 class Track(Base):
-    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
-    faculty_id: Mapped[int] = Column(Integer, primary_key=True)
-    university_id: Mapped[int] = Column(Integer, primary_key=True)
+    """ A track within a university is usually a path to getting a degree
+        Most tracks belong to a particular department & faculty,
+        but some tracks can cross departments or even faculties.
+    """
+
+    # Uniquely identifies the track within a university
+    id: Mapped[str] = Column(Text, primary_key=True)
+    university_id: Mapped[int] = Column(
+        Integer, ForeignKey("university.id"), primary_key=True
+    )
     name_translations: Translations = Column(JSON, nullable=False, default=lambda: {})
     degree: Mapped[DegreeType] = Column(Enum(DegreeType), nullable=False)
+    extra_data: ExtraData = Column(JSON, nullable=False, default=lambda: {})
 
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ["faculty_id", "university_id"], ["faculty.id", "faculty.university_id"]
-        ),
+    university: Mapped["University"] = relationship(
+        "University", back_populates="tracks"
     )
-
-    faculty: Mapped["Faculty"] = relationship("Faculty", back_populates="tracks")
 
     courses: Mapped[List["Course"]] = relationship(
         "Course", secondary=track_course, back_populates="tracks"
     )
 
-    extra_data: ExtraData = Column(JSON, nullable=False, default=lambda: {})
+    departments: Mapped[List["Department"]] = relationship(
+        "Department", secondary=track_department, back_populates="tracks"
+    )
