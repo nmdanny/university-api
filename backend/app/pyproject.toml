@@ -22,6 +22,7 @@ jinja2 = "^2.11.2"
 psycopg2-binary = "^2.8.5"
 alembic = "^1.4.2"
 sqlalchemy = "^1.4"
+sqlalchemy-utils = "^0.37.0"
 pytest = "^5.4.1"
 python-jose = {extras = ["cryptography"], version = "^3.1.0"}
 
@@ -35,6 +36,7 @@ pytest = "^5.4.1"
 sqlalchemy2-stubs = "^0.0.1a4"
 pytest-cov = "^2.8.1"
 debugpy = "^1.2"
+autopep8 = "^1.5.6"
 
 [tool.isort]
 multi_line_output = 3
