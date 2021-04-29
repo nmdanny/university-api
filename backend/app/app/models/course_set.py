@@ -12,15 +12,11 @@ from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.dialects.postgresql import JSON
 from app.db.base_class import Base, ExtraData
-from typing import TYPE_CHECKING, Optional, List
+from typing import Optional, List
 
-from .course import Course  # noqa: F401
+from .course import Course
+from .track import Track
 from .university import University
-if TYPE_CHECKING:
-    from .track import Track  # noqa: F401
-    from .course import Course  # noqa: F401
-
-DEFAULT_MAX_INT = 9999
 
 
 class CourseSet(Base):
@@ -32,35 +28,36 @@ class CourseSet(Base):
         of courses which should be chosen from this set.
 
         A course set is also a node within a DAG, which allows expressing
-        more complicated tracks, such as prerequisites, choice between paths,
-        etc.
+        more complicated tracks, such as prerequisites and choice between paths.
     """
 
     # id within the tree
     id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
 
     # defines the track to which this tree node belongs (or just the university)
-    university_id: Mapped[int] = Column(Integer, ForeignKey("university.id"), primary_key=True)
+    university_id: Mapped[int] = Column(
+        Integer, ForeignKey("university.id"), primary_key=True
+    )
     track_id: Mapped[Optional[str]] = Column(Text, nullable=True)
 
     # requirements and metadata of this set
-    min_subset_size: Mapped[int] = Column(Integer)
-    max_subset_size: Mapped[int] = Column(Integer, default=DEFAULT_MAX_INT)
-    min_credits: Mapped[int] = Column(Integer, default=0)
-    max_credits: Mapped[int] = Column(Integer, default=DEFAULT_MAX_INT)
+    min_subset_size: Mapped[Optional[int]] = Column(Integer, nullable=True)
+    max_subset_size: Mapped[Optional[int]] = Column(Integer, nullable=True)
+    min_credits: Mapped[Optional[int]] = Column(Integer, nullable=True)
+    max_credits: Mapped[Optional[int]] = Column(Integer, nullable=True)
     extra_data: ExtraData = Column(JSON, nullable=False, default=lambda: {})
 
     university: Mapped[University] = relationship(University)
 
-    track: Mapped[Optional["Track"]] = relationship(
-        "Track", back_populates="root_course_set"
+    track: Mapped[Optional[Track]] = relationship(
+        Track, back_populates="root_course_set"
     )
 
     # leafs (individual courses that are members of this set)
     course_memberships: Mapped[List["CourseSetMembership"]] = relationship(
         "CourseSetMembership", back_populates="set",
     )
-    courses: Mapped[List["Course"]] = association_proxy("course_memberships", "course")
+    courses: Mapped[List[Course]] = association_proxy("course_memberships", "course")
 
     __table_args__ = (
         ForeignKeyConstraint(
@@ -80,10 +77,10 @@ class CourseSetMembership(Base):
     course_id: Mapped[str] = Column(Text, primary_key=True)
     extra_data: ExtraData = Column(JSON, nullable=False, default=lambda: {})
 
-    set: Mapped["CourseSet"] = relationship(
-        "CourseSet", back_populates="course_memberships",
+    set: Mapped[CourseSet] = relationship(
+        CourseSet, back_populates="course_memberships",
     )
-    course: Mapped["Course"] = relationship("Course")
+    course: Mapped[Course] = relationship(Course)
 
     def __init__(self, course: Course):
         self.course = course
@@ -99,17 +96,27 @@ class CourseSetMembership(Base):
 
 
 class CourseSetEdgeType(enum.Enum):
-    AndThen = 0
+    Prerequisite = 0
     And = 1
     Or = 2
 
 
 class CourseSetEdge(Base):
+    """ An edge between two course sets (a,b) can represent one of the following:
+
+        - A pre-requisite, indicating that if one wishes to do (b), he must do (a) first
+
+        - 'Or' connector, indicating that anywhere where (a) is required, (b) can be done instead
+
+        - 'And' connector, indicating that both (a) and (b) must be done
+
+    """
+
     university_id: Mapped[int] = Column(Integer, primary_key=True)
     from_set_id: Mapped[int] = Column(Integer, primary_key=True)
     to_set_id: Mapped[int] = Column(Integer, primary_key=True)
     edge_type: Mapped[CourseSetEdgeType] = Column(
-        Enum(CourseSetEdgeType), default=CourseSetEdgeType.And
+        Enum(CourseSetEdgeType)
     )
     extra_data: ExtraData = Column(JSON, nullable=False, default=lambda: {})
 

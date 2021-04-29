@@ -15,16 +15,13 @@ if TYPE_CHECKING:
     from .course import Course  # noqa: F401
 
 
-class DegreeType(enum.Enum):
-    """ Type of degree for a track
-        Numbered according to ISCED
-        https://en.wikipedia.org/wiki/International_Standard_Classification_of_Education
-    """
+class DegreeType(str, enum.Enum):
+    """ Type of degree for a track """
 
-    Misc = 0
-    Bachelors = 6
-    Masters = 7
-    Doctoral = 8
+    Misc = 'Misc'
+    Bachelors = 'Bachelors'
+    Masters = 'Masters'
+    Doctoral = 'Doctoral'
 
 
 class Track(Base):
@@ -49,10 +46,6 @@ class Track(Base):
     root_course_set: Mapped["CourseSet"] = relationship(
         "CourseSet", back_populates="track"
     )
-
-    # course_sets: Mapped[List["CourseSet"]] = relationship(
-    #     "CourseSet", back_populates="track"
-    # )
 
     departments: Mapped[List["Department"]] = relationship(
         "Department", secondary=track_department, back_populates="tracks"

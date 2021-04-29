@@ -84,20 +84,12 @@ def test_can_create_uni(db: Session) -> None:
     ]
 
     set1 = CourseSet(
-        university=uni,
-        min_subset_size=0,
-        max_subset_size=0,
-        min_credits=0,
-        max_credits=0,
+        university=uni
     )
     set1.courses.append(courses[0])
 
     set2 = CourseSet(
-        university=uni,
-        min_subset_size=0,
-        max_subset_size=0,
-        min_credits=0,
-        max_credits=0,
+        university=uni
     )
     set2.courses.append(courses[1])
 
