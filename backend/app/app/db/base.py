@@ -9,5 +9,5 @@ from app.models.department import Department  # noqa
 from app.models.track import Track, DegreeType  # noqa
 from app.models.term import Term  # noqa
 from app.models.course import Course  # noqa
-from app.models.track_course import track_course  # noqa
 from app.models.track_department import track_department  # noqa
+from app.models.course_set import CourseSet, CourseSetMembership  # noqa

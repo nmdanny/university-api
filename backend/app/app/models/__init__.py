@@ -6,5 +6,5 @@ from .department import Department
 from .track import Track, DegreeType  
 from .term import Term  
 from .course import Course
-from .track_course import track_course  
 from .track_department import track_department
+from .course_set import CourseSet, CourseSetMembership, CourseSetEdge, CourseSetEdgeType

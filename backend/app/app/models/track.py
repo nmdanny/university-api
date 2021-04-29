@@ -6,10 +6,10 @@ from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.dialects.postgresql import JSON
 from app.db.base_class import Base, ExtraData, Translations
 
-from .track_course import track_course
 from .track_department import track_department
 
 if TYPE_CHECKING:
+    from .course_set import CourseSet  # noqa: F401
     from .university import University  # noqa: F401
     from .department import Department  # noqa: F401
     from .course import Course  # noqa: F401
@@ -46,9 +46,13 @@ class Track(Base):
         "University", back_populates="tracks"
     )
 
-    courses: Mapped[List["Course"]] = relationship(
-        "Course", secondary=track_course, back_populates="tracks"
+    root_course_set: Mapped["CourseSet"] = relationship(
+        "CourseSet", back_populates="track"
     )
+
+    # course_sets: Mapped[List["CourseSet"]] = relationship(
+    #     "CourseSet", back_populates="track"
+    # )
 
     departments: Mapped[List["Department"]] = relationship(
         "Department", secondary=track_department, back_populates="tracks"
