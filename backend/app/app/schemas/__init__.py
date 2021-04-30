@@ -5,3 +5,4 @@ from .user import User, UserCreate, UserInDB, UserUpdate
 from .course import Course, Term
 from .track import Track
 from .university import University, UniversityWithTracks, Faculty, Department
+from .course_set import CourseSet

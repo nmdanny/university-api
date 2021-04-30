@@ -9,7 +9,7 @@ from app.db.base_class import Base, ExtraData, Translations
 from .track_department import track_department
 
 if TYPE_CHECKING:
-    from .course_set import CourseSet  # noqa: F401
+    from .course_dag import DAGRootNode  # noqa: F401
     from .university import University  # noqa: F401
     from .department import Department  # noqa: F401
     from .course import Course  # noqa: F401
@@ -43,9 +43,6 @@ class Track(Base):
         "University", back_populates="tracks"
     )
 
-    root_course_set: Mapped["CourseSet"] = relationship(
-        "CourseSet", back_populates="track"
-    )
 
     departments: Mapped[List["Department"]] = relationship(
         "Department", secondary=track_department, back_populates="tracks"

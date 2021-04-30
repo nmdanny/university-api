@@ -13,6 +13,7 @@ from sqlalchemy.dialects.postgresql import JSON
 from app.db.base_class import Base, Translations, ExtraData
 
 if TYPE_CHECKING:
+    from .course_set import CourseSetMembership  # noqa: F401
     from .university import University  # noqa: F401
     from .track import Track  # noqa: F401
     from .term import Term  # noqa: F401
@@ -34,3 +35,7 @@ class Course(Base):
     )
 
     term: Mapped["Term"] = relationship("Term", lazy="joined")
+
+    memberships: Mapped[List["CourseSetMembership"]] = relationship(
+        "CourseSetMembership", back_populates="course"
+    )

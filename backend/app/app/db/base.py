@@ -11,3 +11,4 @@ from app.models.term import Term  # noqa
 from app.models.course import Course  # noqa
 from app.models.track_department import track_department  # noqa
 from app.models.course_set import CourseSet, CourseSetMembership  # noqa
+from app.models.course_dag import DAGNode, DAGRootNode, ORNode, CourseSetNode  # noqa
