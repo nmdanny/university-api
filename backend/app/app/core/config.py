@@ -6,7 +6,10 @@ from pydantic import AnyHttpUrl, BaseSettings, EmailStr, HttpUrl, PostgresDsn, v
 
 class Settings(BaseSettings):
 
-    DEBUG_MODE: bool = False
+
+    ECHO_SQL: bool = False
+    DEBUG_TRACEBACKS: bool = False
+    DEBUGGER: bool = False
     WAIT_FOR_ATTACH: bool = False
 
     API_V1_STR: str = "/api/v1"
