@@ -8,4 +8,4 @@ from .term import Term
 from .course import Course
 from .track_department import track_department
 from .course_set import CourseSet, CourseSetMembership
-from .course_dag import DAGNode, DAGRootNode, CourseSetNode, ORNode, singleton_course_node
+from .course_dag import DAGNode, DAGRootNode, CourseSetNode, ORNode, singleton_course_node, dag_edge_assoc

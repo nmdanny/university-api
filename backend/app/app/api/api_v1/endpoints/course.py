@@ -9,14 +9,14 @@ from app.api import deps
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Any])
+@router.get("/", response_model=List[schemas.Course])
 def read_courses(
     university_id: int,
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
 ) -> Any:
-    tracks = (
+    courses = (
         db.query(models.Course)
         .filter(models.Course.university_id == university_id)
         .join(models.Term)
@@ -24,7 +24,7 @@ def read_courses(
         .limit(limit)
         .all()
     )
-    return tracks
+    return courses
 
 
 @router.get("/{course_id}", response_model=schemas.Course)
