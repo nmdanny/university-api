@@ -24,7 +24,3 @@ class Faculty(Base):
     university: Mapped["University"] = relationship(
         "University", back_populates="faculties"
     )
-
-    departments: Mapped[List["Department"]] = relationship(
-        "Department", back_populates="faculty"
-    )

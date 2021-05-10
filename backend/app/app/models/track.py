@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.dialects.postgresql import JSON
 from app.db.base_class import Base, ExtraData, Translations
 
-from .track_department import track_department
 
 if TYPE_CHECKING:
     from .course_dag import DAGRootNode  # noqa: F401
@@ -41,9 +40,4 @@ class Track(Base):
 
     university: Mapped["University"] = relationship(
         "University", back_populates="tracks"
-    )
-
-
-    departments: Mapped[List["Department"]] = relationship(
-        "Department", secondary=track_department, back_populates="tracks"
     )
