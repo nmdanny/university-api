@@ -1,7 +1,3 @@
-import sys
-
-print(sys.path)
-
 import json
 from typing import List, Mapping, Optional, Union, Type
 
@@ -14,89 +10,100 @@ from app.models import (
     University, Course, Track, Department, Faculty, Term, DegreeType
 )
 
-from base_serializer import Serializer
+Item = Union[University, Course, Track, Department, Faculty, Term]
+ItemType = Union[Type[University], Type[Course], Type[Track], Type[Department], Type[Faculty], Type[Term]]
+
+key_mapper = {
+    "name": "name_translations",
+    "degreeType": "degree",
+    "extraData": "extra_data",
+    "credits": "course_credits"
+}
+
+type_generator_mapper = {
+    "departments": Department,
+    "faculties": Faculty,
+    "tracks": Track,
+    "courses": Course
+}
 
 
-class JsonSerializer(Serializer):
+class JsonSerializer:
     def __init__(self, input_path: str):
-        super().__init__(input_path)
+        self.input: dict = self.load_input(input_path)
         self.db: Session = SessionLocal()
         self.remove_all()
-        self.university: University = self.create_university(self.input["universityName"],
-                                                             self.input.get("extraData"),
-                                                             university_id=self.input.get("universityId"))
+        # must be configured before serializing
+        self.university: University = self.create_item(University, self.input["university"])
+
+        self.populate_db()
+
+    def populate_db(self):
+        del self.input["university"]
+        self._serialize_item_map(self.input)
 
     @staticmethod
-    def load_input(input_path) -> Mapping[str, object]:
+    def load_input(input_path) -> dict:
         with open(input_path, "r") as js_file:
             return json.load(js_file, encoding="utf8")
 
-    def create_university(self, name_translations: Translations,
+    def create_university(self,
+                          name_translations: Translations,
                           extra_data: Optional[ExtraData],
-                          university_id: int):
-        university = University(name_translations=name_translations,
-                                extra_data=extra_data,
-                                id=university_id)
-        self.db.add(university)
-        self.db.commit()
-        print(f"Created new University with ID={university.id}")
+                          university_id: int) -> University:
+        return self._get_or_create_item(University, name_translations=name_translations,
+                                        extra_data=extra_data,
+                                        id=university_id)
 
-        return university
+    def get_or_create_term(self, term_map: dict):
+        return self._get_or_create_item(Term, **term_map)
 
-    def get_or_create_term(self, name_translations: Translations):
-        return self.get_or_create_item(Term, name_translations=name_translations)
+    @staticmethod
+    def convert_map_keys(item_map: dict):
+        return {k if k not in key_mapper else key_mapper[k]: v for k, v in item_map.items()}
 
-    def get_or_create_track(self,
-                            track_id: int,
-                            name_translations: Translations,
-                            degree: DegreeType,
-                            extra_data: Optional[ExtraData]):
-        return self.get_or_create_item(Track, name_translations=name_translations, degree=degree, id=track_id,
-                                       university=self.university, extra_data=extra_data)
-
-    def get_or_create_department(self,
-                                 track_id: int,
-                                 name_translations: Translations,
-                                 extra_data: Optional[ExtraData]):
-        return self.get_or_create_item(Department, name_translations=name_translations, id=track_id,
-                                       university=self.university, extra_data=extra_data)
+    def create_item(self, item_type: ItemType, item_map: dict) -> Item:
+        return self._get_or_create_item(item_type, **item_map)
 
     def create_course(self, course_map):
-        term = self.get_or_create_term(course_map["term"])
-        tracks = [self.get_or_create_track(track_map["id"],
-                                           track_map["name"],
-                                           DegreeType[track_map["degreeType"]],
-                                           extra_data=track_map.get("extraData"))
-                  for track_map in course_map["tracks"]]
-        departments = [self.get_or_create_department(department_map["id"],
-                                                     department_map["name"],
-                                                     extra_data=department_map.get("extraData"))
-                       for department_map in course_map["departments"]]
+        return self.create_item(Course, course_map)
 
     def create_courses(self):
         for course in self.input['courses']:
             self.create_course(course)
 
-    def get_or_create_item(self, cls: Union[Type[Course], Type[Track], Type[Department], Type[Faculty], Type[Term]],
-                           **kwargs):
+    def _serialize_item_map(self, item_mapping: dict):
+        return {
+            k: v if k not in type_generator_mapper else self._serialize_list_items(
+                k, v) for k, v in item_mapping.items()
+        }
+
+    @staticmethod
+    def _map_json_keys(item_mapping: dict):
+        return {
+            k if k not in key_mapper else key_mapper[k]: v for k, v in item_mapping.items()
+        }
+
+    def _serialize_list_items(self, key, list_items):
+        return [self.create_item(type_generator_mapper[key], {**item, "university": self.university}) for item in
+                list_items]
+
+    def _get_or_create_item(self, cls: ItemType, **kwargs) -> Item:
+        kwargs = self._serialize_item_map(self._map_json_keys(kwargs))
         cached_item = self.get_item(cls, kwargs["name_translations"], item_id=kwargs.get("id"))
         if cached_item is not None:
             print(f"{cls.__name__} already exists")
             return cached_item
 
-        print(f"Creating {cls.__name__}")
         item = cls(**kwargs)
+        print(f"Created new {cls.__name__} with id={item.id}")
 
         self.db.add(item)
         self.db.commit()
 
         return item
 
-    def get_item(self, cls, name_translations, item_id=None) -> Optional[Union[Type[Course],
-                                                                               Type[Track],
-                                                                               Type[Department],
-                                                                               Type[Faculty],
-                                                                               Type[Term]]]:
+    def get_item(self, cls, name_translations, item_id=None) -> Optional[Item]:
         items_filter = self.db.query(cls).filter(cls.name_translations["en"].astext == name_translations["en"])
         if item_id is not None:
             items_filter = items_filter.filter(cls.id == item_id)
@@ -107,19 +114,11 @@ class JsonSerializer(Serializer):
 
         return None
 
-    @staticmethod
-    def where_clause_generator(*args: Union[str, bool]):
-        return "where " + " and ".join(filter(bool, args)) if len(args) > 0 else ""
-
     def remove_all(self):
         tables = ["track", "course", "department", "faculty", "term", "university"]
         for table in tables:
             self.db.execute(f"delete from {table};")
         self.db.commit()
-
-    @staticmethod
-    def compare_obj_fields(field1, field2):
-        return hash(str(field1)) == hash(str(field2))
 
 
 if __name__ == '__main__':

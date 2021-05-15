@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from .university import University  # noqa: F401
     from .track import Track  # noqa: F401
     from .term import Term  # noqa: F401
+    from .faculty import Faculty  # noqa: F401
+    from .department import Department  # noqa: F401
 
 
 class Course(Base):
@@ -35,6 +37,12 @@ class Course(Base):
     )
 
     term: Mapped["Term"] = relationship("Term", lazy="joined")
+
+    faculties: Mapped["Faculty"] = relationship("Faculty", back_populates="faculties")
+
+    tracks: Mapped["Track"] = relationship("Track", back_populates="tracks")
+
+    departments: Mapped["Department"] = relationship("Department", back_populates="departments")
 
     memberships: Mapped[List["CourseSetMembership"]] = relationship(
         "CourseSetMembership", back_populates="course"

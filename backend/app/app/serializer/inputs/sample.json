@@ -1,20 +1,27 @@
 {
-  "universityName": {
-    "he": "העברית",
-    "en": "heb un"
-  },
-  "universityId": 1,
   "parseDate": "YYYY-mm-dd",
+  "university": {
+    "name": {
+      "he": "העברית",
+      "en": "heb un"
+    },
+    "id": 1,
+    "extraData": {
+      "hasEnglishClasses": true
+    }
+  },
   "courses": [
     {
-      "courseName": {
+      "name": {
         "he": "אינפי2",
         "en": "infi2"
       },
-      "courseId": "80133",
+      "id": "80133",
       "term": {
-        "he": "ב",
-        "en": "b"
+        "name": {
+          "he": "ב",
+          "en": "b"
+        }
       },
       "tracks": [
         {
@@ -73,8 +80,5 @@
         "syllabus": "https://huji.ac.il/1000"
       }
     }
-  ],
-  "extraData": {
-    "hasEnglishClasses": true
-  }
+  ]
 }
