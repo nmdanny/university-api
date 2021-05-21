@@ -24,7 +24,15 @@ type_generator_mapper = {
     "departments": Department,
     "faculties": Faculty,
     "tracks": Track,
-    "courses": Course
+    "courses": Course,
+    "term": Term
+}
+
+child_to_parent_mapper = {
+    "departments": "courses",
+    "faculties": "courses",
+    "tracks": "courses",
+    "courses": "university"
 }
 
 
@@ -34,13 +42,17 @@ class JsonSerializer:
         self.db: Session = SessionLocal()
         self.remove_all()
         # must be configured before serializing
-        self.university: University = self.create_item(University, self.input["university"])
+        # self.university: University = self.create_item(University, self.input["university"])
+        self.campaign_context = None  # current campaign context
+        self.course_cache = {}
 
         self.populate_db()
 
     def populate_db(self):
-        del self.input["university"]
-        self._serialize_item_map(self.input)
+
+
+        # del self.input["university"]
+        self.serialize_json(self.input)
 
     @staticmethod
     def load_input(input_path) -> dict:
@@ -51,7 +63,8 @@ class JsonSerializer:
                           name_translations: Translations,
                           extra_data: Optional[ExtraData],
                           university_id: int) -> University:
-        return self._get_or_create_item(University, name_translations=name_translations,
+        return self._get_or_create_item(University,
+                                        name_translations=name_translations,
                                         extra_data=extra_data,
                                         id=university_id)
 
@@ -68,28 +81,57 @@ class JsonSerializer:
     def create_course(self, course_map):
         return self.create_item(Course, course_map)
 
-    def create_courses(self):
-        for course in self.input['courses']:
-            self.create_course(course)
+    # def create_courses(self):
+    #     for course in self.input['courses']:
+    #         self.create_course(course)
 
-    def _serialize_item_map(self, item_mapping: dict):
-        return {
-            k: v if k not in type_generator_mapper else self._serialize_list_items(
-                k, v) for k, v in item_mapping.items()
-        }
+    def serialize_json(self, json_dict: dict):
+        university_dependencies = ["courses"]
+        json_dict = json_dict["university"]
+        university = self.create_item(University, {k: json_dict[k] for k in json_dict.keys() if k not in university_dependencies})
+        # self.create_courses(item_mapping["courses"], university)
+
+    def serialize_mapping(self, item_mapping):
+        for key in [_ for _ in item_mapping if _ in type_generator_mapper]:
+            parent_item = self._get_or_create_item(type_generator_mapper[key],
+                                                   **{k: v for k, v in item_mapping[key].items() if
+                                                      k not in type_generator_mapper[key].course_sub_keys})
+
+    def _serialize(self, item_mapping, key, parent=None):
+        item_mapping = self._map_json_keys(item_mapping)
+        item_cls = type_generator_mapper[key]
+        kwargs = {k: v for k, v in item_mapping.items() if k not in item_cls.course_sub_keys}
+        if key in child_to_parent_mapper:
+            kwargs[child_to_parent_mapper[key]] = parent
+
+        current_item = self._get_or_create_item(item_cls, **kwargs)
+        for key in [_ for _ in item_mapping if _ in type_generator_mapper]:
+            value = item_mapping[key]
+            if type(value) is list:
+                [self._serialize(item, key, current_item) for item in value]
+            else:
+                self._serialize(item_mapping[key], key, current_item)
+
+    def create_courses(self, courses, university):
+        course_dependencies = ["departments", "faculties", "tracks"]
+        for course_map in courses:
+            course = self.create_item(Course, {key: course_map[key] for key in course_map.keys() if
+                                               key not in course_dependencies})
+            if course.id not in self.course_cache:
+                self.course_cache[course.id] = course
+            for course_dependency in course_dependencies:
+                self._serialize_list_items(course_dependency, course_map[course_dependency],
+                                           {"course": course, "university": university})
 
     @staticmethod
     def _map_json_keys(item_mapping: dict):
-        return {
-            k if k not in key_mapper else key_mapper[k]: v for k, v in item_mapping.items()
-        }
+        return {k if k not in key_mapper else key_mapper[k]: v for k, v in item_mapping.items()}
 
-    def _serialize_list_items(self, key, list_items):
-        return [self.create_item(type_generator_mapper[key], {**item, "university": self.university}) for item in
-                list_items]
+    def _serialize_list_items(self, key, list_items, item_extension={}):
+        return [self.create_item(type_generator_mapper[key], {**item, **item_extension}) for item in list_items]
 
     def _get_or_create_item(self, cls: ItemType, **kwargs) -> Item:
-        kwargs = self._serialize_item_map(self._map_json_keys(kwargs))
+        kwargs = self._map_json_keys(kwargs)
         cached_item = self.get_item(cls, kwargs["name_translations"], item_id=kwargs.get("id"))
         if cached_item is not None:
             print(f"{cls.__name__} already exists")
@@ -124,7 +166,6 @@ class JsonSerializer:
 if __name__ == '__main__':
     serializer = JsonSerializer(settings.INPUT_PATH + "/sample.json")
 
-    serializer.create_courses()
     # serializer.create_courses()
 
     print("all:")

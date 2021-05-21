@@ -38,12 +38,14 @@ class Course(Base):
 
     term: Mapped["Term"] = relationship("Term", lazy="joined")
 
-    faculties: Mapped["Faculty"] = relationship("Faculty", back_populates="faculties")
+    faculties: Mapped["Faculty"] = relationship("Faculty", back_populates="course")
 
-    tracks: Mapped["Track"] = relationship("Track", back_populates="tracks")
+    tracks: Mapped["Track"] = relationship("Track", back_populates="course")
 
-    departments: Mapped["Department"] = relationship("Department", back_populates="departments")
+    departments: Mapped["Department"] = relationship("Department", back_populates="course")
 
     memberships: Mapped[List["CourseSetMembership"]] = relationship(
         "CourseSetMembership", back_populates="course"
     )
+
+    course_sub_keys = ["faculties", "tracks", "departments"]
