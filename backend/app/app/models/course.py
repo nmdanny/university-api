@@ -4,7 +4,6 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     ForeignKeyConstraint,
-    CheckConstraint,
     Integer,
     Text,
 )
@@ -19,6 +18,50 @@ if TYPE_CHECKING:
     from .term import Term  # noqa: F401
     from .faculty import Faculty  # noqa: F401
     from .department import Department  # noqa: F401
+
+
+course_faculty = Table(
+    "course_faculty",
+    Base.metadata,
+    Column("university_id", Integer, primary_key=True),
+    Column("course_id", Text, primary_key=True),
+    Column("faculty_id", Text, primary_key=True),
+    ForeignKeyConstraint(
+        ["university_id", "course_id"], ["course.university_id", "course.id"]
+    ),
+    ForeignKeyConstraint(
+        ["university_id", "faculty_id"], ["faculty.university_id", "faculty.id"]
+    ),
+)
+
+course_department = Table(
+    "course_department",
+    Base.metadata,
+    Column("university_id", Integer, primary_key=True),
+    Column("course_id", Text, primary_key=True),
+    Column("department_id", Text, primary_key=True),
+    ForeignKeyConstraint(
+        ["university_id", "course_id"], ["course.university_id", "course.id"]
+    ),
+    ForeignKeyConstraint(
+        ["university_id", "department_id"],
+        ["department.university_id", "department.id"],
+    ),
+)
+
+course_track = Table(
+    "course_track",
+    Base.metadata,
+    Column("university_id", Integer, primary_key=True),
+    Column("course_id", Text, primary_key=True),
+    Column("track_id", Text, primary_key=True),
+    ForeignKeyConstraint(
+        ["university_id", "course_id"], ["course.university_id", "course.id"]
+    ),
+    ForeignKeyConstraint(
+        ["university_id", "track_id"], ["track.university_id", "track.id"]
+    ),
+)
 
 
 class Course(Base):
@@ -38,14 +81,16 @@ class Course(Base):
 
     term: Mapped["Term"] = relationship("Term", lazy="joined")
 
-    faculties: Mapped["Faculty"] = relationship("Faculty", back_populates="course")
-
-    tracks: Mapped["Track"] = relationship("Track", back_populates="course")
-
-    departments: Mapped["Department"] = relationship("Department", back_populates="course")
+    faculties: Mapped["Faculty"] = relationship(
+        "Faculty", secondary=course_faculty, back_populates="courses"
+    )
+    tracks: Mapped["Track"] = relationship(
+        "Track", secondary=course_track, back_populates="courses"
+    )
+    departments: Mapped["Department"] = relationship(
+        "Department", secondary=course_department, back_populates="courses"
+    )
 
     memberships: Mapped[List["CourseSetMembership"]] = relationship(
         "CourseSetMembership", back_populates="course"
     )
-
-    course_sub_keys = ["faculties", "tracks", "departments"]

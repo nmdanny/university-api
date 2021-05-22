@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, Text, Enum, ForeignKey
 from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.dialects.postgresql import JSON
 from app.db.base_class import Base, ExtraData, Translations
+from .course import course_track
 
 
 if TYPE_CHECKING:
@@ -40,4 +41,8 @@ class Track(Base):
 
     university: Mapped["University"] = relationship(
         "University", back_populates="tracks"
+    )
+
+    courses: Mapped[List["Course"]] = relationship(
+        "Course", secondary=course_track, back_populates="tracks"
     )
