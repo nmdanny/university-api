@@ -1,7 +1,7 @@
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import literal, select, null, cast, Integer
 from sqlalchemy.orm import with_polymorphic, aliased
 from sqlalchemy.sql import column, label
@@ -28,12 +28,13 @@ def read_tracks(
     return tracks
 
 
-@router.get("/{track_id}", response_model=schemas.Track)
+@router.get("/{track_id}", response_model=schemas.TrackWithCourses)
 def read_track(
     university_id: int, track_id: str, db: Session = Depends(deps.get_db),
 ) -> Any:
     track = (
         db.query(models.Track)
+        .options(joinedload(models.Track.courses))  # type: ignore
         .filter(
             (models.Track.university_id == university_id)
             & (models.Track.id == track_id)

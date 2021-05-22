@@ -1,7 +1,7 @@
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app import models, schemas
 from app.api import deps
@@ -18,8 +18,12 @@ def read_courses(
 ) -> Any:
     courses = (
         db.query(models.Course)
+        .options(
+            joinedload(models.Course.term),  # type: ignore
+            joinedload(models.Course.departments),  # type: ignore
+            joinedload(models.Course.faculties),  # type: ignore
+        )
         .filter(models.Course.university_id == university_id)
-        .join(models.Term)
         .offset(skip)
         .limit(limit)
         .all()
@@ -27,12 +31,18 @@ def read_courses(
     return courses
 
 
-@router.get("/{course_id}", response_model=schemas.Course)
+@router.get("/{course_id}", response_model=schemas.CourseWithTracks)
 def read_course(
     university_id: int, course_id: str, db: Session = Depends(deps.get_db),
 ) -> Any:
     course = (
         db.query(models.Course)
+        .options(
+            joinedload(models.Course.term),  # type: ignore
+            joinedload(models.Course.departments),  # type: ignore
+            joinedload(models.Course.faculties),  # type: ignore
+            joinedload(models.Course.tracks),  # type: ignore
+        )
         .filter(
             (models.Course.university_id == university_id)
             & (models.Course.id == course_id)

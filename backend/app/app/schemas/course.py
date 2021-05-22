@@ -1,3 +1,5 @@
+from typing import List
+from .university import Department, Faculty, Track
 from .common import ExtraData, Translations, ExtraDataField, TranslationsField
 from pydantic import BaseModel, Field
 
@@ -35,5 +37,16 @@ class Course(BaseModel):
         ..., description="Number of academic credits for the course"
     )
 
+    departments: List[Department] = Field(
+        ..., description="Departments responsible for this course"
+    )
+    faculties: List[Faculty] = Field(
+        ..., description="Faculties responsible for this course"
+    )
+
     class Config:
         orm_mode = True
+
+
+class CourseWithTracks(Course):
+    tracks: List[Track] = Field(..., description="Tracks that include this course")
