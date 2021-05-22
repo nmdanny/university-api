@@ -9,12 +9,14 @@ from app.models import (
     Course,
     CourseSet,
     CourseSetMembership,
-    DAGNode, CourseSetNode, ORNode, singleton_course_node, DAGRootNode
+    DAGNode, CourseSetNode, ORNode,
+    faculty, singleton_course_node, DAGRootNode,
+    university
 )
 
 
 def test_can_create_uni(db: Session) -> None:
-    uni = University(name_translations={"en": "Test Uni", "he": "אוני בדיקה"})
+    uni = University(id=1, name_translations={"en": "Test Uni", "he": "אוני בדיקה"})
 
     terms = [
         Term(id=1, name_translations={"en": "Semester 1"}),
@@ -31,12 +33,12 @@ def test_can_create_uni(db: Session) -> None:
         },
     )
     dep = Department(
-        faculty=fac,
+        university=uni,
         id="521",
         name_translations={"en": "Computer Science", "he": "מדעי המחשב"},
     )
     dep2 = Department(
-        faculty=fac,
+        university=uni,
         id="583",
         name_translations={
             "en": "Electrical & Computer Engineering",
@@ -49,14 +51,12 @@ def test_can_create_uni(db: Session) -> None:
             id="23010",
             degree=DegreeType.Bachelors,
             name_translations={"he": 'מדמ"ח חד חוגי מורחב'},
-            departments=[dep],
         ),
         Track(
             university=uni,
             id="125860",
             degree=DegreeType.Bachelors,
             name_translations={"he": "הנדסת חשמל ומחשבים עם התחמות בהנדסת מחשבים"},
-            departments=[dep2],
         ),
     ]
 
@@ -75,6 +75,10 @@ def test_can_create_uni(db: Session) -> None:
             course_credits=1337
         ) for name in course_names
     }
+    for course in courses.values():
+        course.departments.append(dep)
+        course.faculties.append(fac)
+        course.tracks.append(tracks[0])
 
     db.add_all(courses.values())
 
@@ -108,7 +112,8 @@ def test_can_create_uni(db: Session) -> None:
         infi1, lin1, or_node, intro
     ])
 
+    db.add_all([dep, dep2])
+    db.add(fac)
     db.add(cs_extended_root)
 
     db.commit()
-
