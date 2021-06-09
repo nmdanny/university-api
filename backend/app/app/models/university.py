@@ -9,12 +9,13 @@ if TYPE_CHECKING:
     from .course import Course  # noqa: F401
     from .faculty import Faculty  # noqa: F401
     from .track import Track  # noqa: F401
+    from .department import Department  # noqa: F401
 
 
 class University(Base):
     """ A university/college is a collection of faculties and courses """
 
-    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True, autoincrement=False)
     name_translations: Translations = Column(JSON, nullable=False, default=lambda: {})
     extra_data: ExtraData = Column(JSON, nullable=False, default=lambda: {})
 
@@ -26,4 +27,10 @@ class University(Base):
         "Faculty", back_populates="university"
     )
 
-    tracks: Mapped[List["Track"]] = relationship("Track", back_populates="university")
+    tracks: Mapped[List["Track"]] = relationship(
+        "Track", back_populates="university"
+    )
+
+    departments: Mapped[List["Department"]] = relationship(
+        "Department", back_populates="university"
+    )

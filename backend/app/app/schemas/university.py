@@ -9,7 +9,6 @@ class Department(BaseModel):
 
     id: str = Field(..., description="An university-specific department identifier")
     university_id: int
-    faculty_id: str
     name_translations: Translations = TranslationsField
     extra_data: ExtraData = ExtraDataField
 
@@ -24,8 +23,6 @@ class Faculty(BaseModel):
     university_id: int
     name_translations: Translations = TranslationsField
     extra_data: ExtraData = ExtraDataField
-
-    departments: List[Department]
 
     class Config:
         orm_mode = True
@@ -43,6 +40,7 @@ class University(BaseModel):
     extra_data: ExtraData = ExtraDataField
 
     faculties: List[Faculty]
+    departments: List[Department]
 
     class Config:
         orm_mode = True

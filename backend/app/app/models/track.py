@@ -5,8 +5,8 @@ from sqlalchemy import Column, Integer, Text, Enum, ForeignKey
 from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.dialects.postgresql import JSON
 from app.db.base_class import Base, ExtraData, Translations
+from .course import course_track
 
-from .track_department import track_department
 
 if TYPE_CHECKING:
     from .course_dag import DAGRootNode  # noqa: F401
@@ -43,7 +43,6 @@ class Track(Base):
         "University", back_populates="tracks"
     )
 
-
-    departments: Mapped[List["Department"]] = relationship(
-        "Department", secondary=track_department, back_populates="tracks"
+    courses: Mapped[List["Course"]] = relationship(
+        "Course", secondary=course_track, back_populates="tracks"
     )

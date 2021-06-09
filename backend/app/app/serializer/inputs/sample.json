@@ -1,0 +1,84 @@
+{
+  "parseDate": "YYYY-mm-dd",
+  "university": {
+    "name": {
+      "he": "העברית",
+      "en": "heb un"
+    },
+    "id": 1,
+    "courses": [
+      {
+        "name": {
+          "he": "אינפי2",
+          "en": "infi2"
+        },
+        "id": "80133",
+        "term": {
+          "name": {
+            "he": "ב",
+            "en": "b"
+          }
+        },
+        "tracks": [
+          {
+            "id": "track1",
+            "degreeType": "Bachelors",
+            "name": {
+              "he": "תואר ראשון למדעים",
+              "en": "bs.c"
+            }
+          }
+        ],
+        "departments": [
+          {
+            "id": "dep1",
+            "name": {
+              "he": "בית ספר למדעי המחשב",
+              "en": "School of computer science"
+            }
+          }
+        ],
+        "faculties": [
+          {
+            "id": "fac1",
+            "name": {
+              "he": "בית ספר למדעי המחשב והנדסה",
+              "en": "School of computer science and engineering"
+            }
+          }
+        ],
+        "credits": 7,
+        "parentDependencies": {
+          "AND": [
+            {
+              "OR": [
+                {
+                  "AND": [
+                    {
+                      "courseId": "12345"
+                    },
+                    {
+                      "courseId": "0000"
+                    }
+                  ]
+                },
+                {
+                  "courseId": "9999"
+                }
+              ]
+            },
+            {
+              "courseId": "1010"
+            }
+          ]
+        },
+        "extraData": {
+          "syllabus": "https://huji.ac.il/1000"
+        }
+      }
+    ],
+    "extraData": {
+      "hasEnglishClasses": true
+    }
+  }
+}
